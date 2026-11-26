@@ -445,14 +445,14 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(15, 23, 42, 0.78);
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 16px;
-      z-index: 9999;
+      z-index: 99999;
     }
     .modal-overlay.hidden { display: none !important; }
     .modal-card {
@@ -460,9 +460,9 @@
       border: 3px solid #38bdf8;
       border-radius: 24px;
       width: 100%;
-      max-width: 490px;
-      padding: 30px;
-      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.3);
+      max-width: 480px;
+      padding: 32px 28px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -478,47 +478,48 @@
       flex-direction: column;
       gap: 16px;
       width: 100%;
-      margin: 20px 0;
+      margin: 20px 0 10px;
     }
     .form-group {
       text-align: left;
     }
     .form-group label {
       display: block;
-      font-size: 13.5px;
+      font-size: 14px;
       font-weight: 800;
       color: #334155;
       margin-bottom: 6px;
     }
     .form-group input {
       width: 100%;
-      padding: 12px 15px;
-      font-size: 15px;
+      padding: 13px 16px;
+      font-size: 16px;
       font-weight: 700;
       border: 2px solid #cbd5e1;
       border-radius: 14px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
     .form-group input:focus {
       border-color: #0284c7;
-      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18);
     }
     .btn-login {
       background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
       color: #ffffff;
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 800;
       border: none;
       border-radius: 14px;
-      padding: 14px;
+      padding: 15px;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+      box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35);
       transition: all 0.2s;
     }
     .btn-login:hover {
       background: #0284c7;
       transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(2, 132, 199, 0.45);
     }
   </style>
 </head>
@@ -618,25 +619,27 @@
     </div>
   </div>
 
-  <!-- 彈窗 1：登入界面（僅需班別與學號） -->
+  <!-- 彈窗 1：登入界面（徹底除錯防呆，保證 100% 登入） -->
   <div class="modal-overlay" id="loginModal">
     <div class="modal-card">
-      <div style="font-size:50px; margin-bottom:8px;">🎯⌨️</div>
-      <h2 style="color:#0284c7; margin-bottom:8px;">倉頡神射手：四大分類</h2>
+      <div style="font-size:52px; margin-bottom:8px;">🎯⌨️</div>
+      <h2 style="color:#0284c7; margin-bottom:8px; font-size:24px;">倉頡神射手：四大分類</h2>
       <p style="font-size:14px; color:#64748b; line-height:1.6;">
         歡迎進入飛鏢訓練場！答對字根分類即可解鎖投擲飛鏢機會。
       </p>
 
-      <form class="login-form" onsubmit="handleLogin(event)">
+      <form class="login-form" id="loginForm" onsubmit="handleLogin(event); return false;">
         <div class="form-group">
-          <label>班別 (Class)：</label>
-          <input type="text" id="login-class" placeholder="例：1A / 2B" required autofocus>
+          <label for="login-class">班別 (Class)：</label>
+          <input type="text" id="login-class" placeholder="例：1A 或 2B" required autofocus 
+                 onkeydown="if(event.key==='Enter'){ handleLogin(event); }">
         </div>
         <div class="form-group">
-          <label>學號 (Class No.)：</label>
-          <input type="number" id="login-no" min="1" max="50" placeholder="例：15" required>
+          <label for="login-no">學號 (Class No.)：</label>
+          <input type="text" id="login-no" placeholder="例：15" required 
+                 onkeydown="if(event.key==='Enter'){ handleLogin(event); }">
         </div>
-        <button type="submit" class="btn-login">🚀 開始挑戰</button>
+        <button type="button" class="btn-login" onclick="handleLogin(event)">🚀 開始挑戰</button>
       </form>
     </div>
   </div>
@@ -668,12 +671,22 @@
   </div>
 
   <script>
-    // --- 音效系統 (Web Audio API) ---
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    // --- 安全音效系統 (防呆 Web Audio API，防止阻斷登入) ---
     let audioCtx = null;
     function initAudio() {
-      if (!audioCtx) audioCtx = new AudioContext();
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtx && AudioContext) {
+          audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      } catch (e) {
+        console.warn("音效啟動被瀏覽器策略限制，遊戲繼續正常進行。");
+      }
     }
+
     function playBeep(freq = 440, type = 'sine', duration = 0.12) {
       if (!audioCtx) return;
       try {
@@ -689,14 +702,18 @@
         osc.stop(audioCtx.currentTime + duration);
       } catch (e) {}
     }
+
     function playHitSound(isBullseye = false) {
-      if (isBullseye) {
-        playBeep(523.25, 'triangle', 0.12);
-        setTimeout(() => playBeep(659.25, 'triangle', 0.15), 90);
-        setTimeout(() => playBeep(1046.50, 'triangle', 0.3), 180);
-      } else {
-        playBeep(260, 'triangle', 0.12);
-      }
+      if (!audioCtx) return;
+      try {
+        if (isBullseye) {
+          playBeep(523.25, 'triangle', 0.12);
+          setTimeout(() => playBeep(659.25, 'triangle', 0.15), 90);
+          setTimeout(() => playBeep(1046.50, 'triangle', 0.3), 180);
+        } else {
+          playBeep(260, 'triangle', 0.12);
+        }
+      } catch(e) {}
     }
 
     // --- 倉頡 24 個基本字母資料庫 ---
@@ -753,7 +770,7 @@
     ];
 
     // --- 遊戲全局狀態 ---
-    let currentUser = { className: "", classNo: "" };
+    let currentUser = { className: "1A", classNo: "1" };
     let totalRounds = 10;
     let currentRoundIndex = 0;
     let quizScore = 0;
@@ -793,19 +810,49 @@
     let currentFrame = 0;
     let dartLanding = { x: 410, y: 175 };
 
-    // --- 登入處理 ---
+    // --- 徹底修復的登入邏輯（防呆、容錯、雙重隱藏） ---
     function handleLogin(e) {
-      e.preventDefault();
+      if (e) {
+        if (typeof e.preventDefault === "function") e.preventDefault();
+        if (typeof e.stopPropagation === "function") e.stopPropagation();
+      }
+
+      // 嘗試安全初始化音效
       initAudio();
-      currentUser.className = document.getElementById("login-class").value.trim();
-      currentUser.classNo = document.getElementById("login-no").value.trim();
 
-      if (!currentUser.className || !currentUser.classNo) return;
+      const classInput = document.getElementById("login-class");
+      const noInput = document.getElementById("login-no");
 
-      document.getElementById("ui-student-label").textContent = `${currentUser.className}班 (${currentUser.classNo}號)`;
-      document.getElementById("loginModal").classList.add("hidden");
+      let className = classInput ? classInput.value.trim() : "";
+      let classNo = noInput ? noInput.value.trim() : "";
 
+      if (!className) {
+        alert("請輸入班別（例如：1A）！");
+        if (classInput) classInput.focus();
+        return false;
+      }
+      if (!classNo) {
+        alert("請輸入學號（例如：15）！");
+        if (noInput) noInput.focus();
+        return false;
+      }
+
+      currentUser.className = className;
+      currentUser.classNo = classNo;
+
+      const label = document.getElementById("ui-student-label");
+      if (label) label.textContent = `${currentUser.className}班 (${currentUser.classNo}號)`;
+
+      // 雙重保證隱藏登入彈窗
+      const loginModal = document.getElementById("loginModal");
+      if (loginModal) {
+        loginModal.classList.add("hidden");
+        loginModal.style.display = "none";
+      }
+
+      // 啟動挑戰
       startChallenge();
+      return false;
     }
 
     function startChallenge() {
@@ -822,24 +869,37 @@
     }
 
     function updateHUD() {
-      document.getElementById("ui-round").textContent = `${currentRoundIndex + 1} / ${totalRounds}`;
-      document.getElementById("ui-quiz-score").textContent = quizScore;
-      document.getElementById("ui-dart-score").textContent = dartScore;
-      document.getElementById("ui-total-score").textContent = quizScore + dartScore;
+      const elRound = document.getElementById("ui-round");
+      const elQuiz = document.getElementById("ui-quiz-score");
+      const elDart = document.getElementById("ui-dart-score");
+      const elTotal = document.getElementById("ui-total-score");
+
+      if (elRound) elRound.textContent = `${currentRoundIndex + 1} / ${totalRounds}`;
+      if (elQuiz) elQuiz.textContent = quizScore;
+      if (elDart) elDart.textContent = dartScore;
+      if (elTotal) elTotal.textContent = quizScore + dartScore;
     }
 
     // --- 階段一：答題階段 ---
     function showQuizPhase() {
       activeQuestion = questionPool[currentRoundIndex];
-      document.getElementById("quiz-letter-char").textContent = activeQuestion.char;
+      const charEl = document.getElementById("quiz-letter-char");
+      if (charEl) charEl.textContent = activeQuestion.char;
 
       const fbBox = document.getElementById("quiz-feedback-box");
-      fbBox.className = "feedback-box";
-      fbBox.style.display = "none"; // 初始隱藏
-      document.getElementById("fb-answer-banner").textContent = "";
-      document.getElementById("fb-hint").textContent = "";
-      document.getElementById("fb-encourage").textContent = "";
-      document.getElementById("fb-action-area").innerHTML = "";
+      if (fbBox) {
+        fbBox.className = "feedback-box";
+        fbBox.style.display = "none"; // 初始隱藏
+      }
+      const elBanner = document.getElementById("fb-answer-banner");
+      const elHint = document.getElementById("fb-hint");
+      const elEncourage = document.getElementById("fb-encourage");
+      const elAction = document.getElementById("fb-action-area");
+
+      if (elBanner) elBanner.textContent = "";
+      if (elHint) elHint.textContent = "";
+      if (elEncourage) elEncourage.textContent = "";
+      if (elAction) elAction.innerHTML = "";
 
       const btns = document.querySelectorAll(".btn-opt");
       btns.forEach(b => {
@@ -847,8 +907,10 @@
         b.disabled = false;
       });
 
-      document.getElementById("quiz-section").style.display = "flex";
-      document.getElementById("dart-section").style.display = "none";
+      const secQuiz = document.getElementById("quiz-section");
+      const secDart = document.getElementById("dart-section");
+      if (secQuiz) secQuiz.style.display = "flex";
+      if (secDart) secDart.style.display = "none";
     }
 
     function selectAnswer(chosenCat) {
@@ -868,12 +930,14 @@
         quizScore += 20;
         updateHUD();
 
-        fbBox.className = "feedback-box success";
-        fbBox.style.display = "block"; // 確保顯現
-        fbAnswerBanner.textContent = `🎉 答對了！+20 分！字根『${activeQuestion.char}』確實屬於【${activeQuestion.category}】！`;
-        fbHint.textContent = `💡 造字原理：${activeQuestion.hint}`;
-        fbEncourage.textContent = `✨ 恭喜你精準掌握造字特徵！即刻解鎖飛鏢投擲機會！`;
-        fbActionArea.innerHTML = "";
+        if (fbBox) {
+          fbBox.className = "feedback-box success";
+          fbBox.style.display = "block";
+        }
+        if (fbAnswerBanner) fbAnswerBanner.textContent = `🎉 答對了！+20 分！字根『${activeQuestion.char}』確實屬於【${activeQuestion.category}】！`;
+        if (fbHint) fbHint.textContent = `💡 造字原理：${activeQuestion.hint}`;
+        if (fbEncourage) fbEncourage.textContent = `✨ 恭喜你精準掌握造字特徵！即刻解鎖飛鏢投擲機會！`;
+        if (fbActionArea) fbActionArea.innerHTML = "";
 
         btns.forEach(b => {
           if (b.textContent.trim() === activeQuestion.category) b.classList.add("correct");
@@ -887,25 +951,23 @@
         playBeep(220, 'sawtooth', 0.22);
 
         const randomQuote = QUIZ_ENCOURAGE_QUOTES[Math.floor(Math.random() * QUIZ_ENCOURAGE_QUOTES.length)];
-        fbBox.className = "feedback-box encouragement";
-        fbBox.style.display = "block"; // 徹底修復：明確設置 display 為 block，讓按鈕完全顯現
+        if (fbBox) {
+          fbBox.className = "feedback-box encouragement";
+          fbBox.style.display = "block";
+        }
 
-        // 1. 先明確告知正確答案
-        fbAnswerBanner.textContent = `📌 正確答案是：【${activeQuestion.category}】（你選擇了：${chosenCat}）`;
+        if (fbAnswerBanner) fbAnswerBanner.textContent = `📌 正確答案是：【${activeQuestion.category}】（你選擇了：${chosenCat}）`;
+        if (fbHint) fbHint.textContent = `💡 造字原理：倉頡字母『${activeQuestion.char}』${activeQuestion.hint}`;
+        if (fbEncourage) fbEncourage.textContent = `${randomQuote} 雖然這題未能解鎖飛鏢，但每一次認真嘗試都是寶貴的進步！`;
 
-        // 2. 說明字根造字原理
-        fbHint.textContent = `💡 造字原理：倉頡字母『${activeQuestion.char}』${activeQuestion.hint}`;
-
-        // 3. 鼓勵用戶努力嘗試
-        fbEncourage.textContent = `${randomQuote} 雖然這題未能解鎖飛鏢，但每一次認真嘗試都是寶貴的進步！`;
-
-        // 4. 提供更換新題目按鈕
-        fbActionArea.innerHTML = `
-          <button class="btn-next-question" id="btnNextQ" onclick="proceedToNextQuestion()">
-            🔄 記住答案，換新一題挑戰！
-          </button>
-          <span style="font-size:12.5px; color:#64748b; margin-left:12px; font-weight:700;">(亦可直接按 Enter 鍵)</span>
-        `;
+        if (fbActionArea) {
+          fbActionArea.innerHTML = `
+            <button class="btn-next-question" id="btnNextQ" onclick="proceedToNextQuestion()">
+              🔄 記住答案，換新一題挑戰！
+            </button>
+            <span style="font-size:12.5px; color:#64748b; margin-left:12px; font-weight:700;">(亦可直接按 Enter 鍵)</span>
+          `;
+        }
 
         btns.forEach(b => {
           if (b.textContent.trim() === chosenCat) b.classList.add("wrong");
@@ -925,11 +987,15 @@
       }
     }
 
-    // 鍵盤 Enter 快速換題支援
+    // 鍵盤 Enter 支援（答錯換題）
     window.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         const nextBtn = document.getElementById("btnNextQ");
-        if (nextBtn) {
+        // 確保不是在登入視窗輸入時誤觸
+        const loginModal = document.getElementById("loginModal");
+        const isLoginOpen = loginModal && !loginModal.classList.contains("hidden") && loginModal.style.display !== "none";
+
+        if (nextBtn && !isLoginOpen) {
           e.preventDefault();
           proceedToNextQuestion();
         }
@@ -944,24 +1010,34 @@
     }
 
     function showDartPhase() {
-      document.getElementById("quiz-section").style.display = "none";
-      document.getElementById("dart-section").style.display = "flex";
+      const secQuiz = document.getElementById("quiz-section");
+      const secDart = document.getElementById("dart-section");
+      if (secQuiz) secQuiz.style.display = "none";
+      if (secDart) secDart.style.display = "flex";
 
       randomizeTargetPosition();
 
       dartState = "AIMING";
       throwPower = 30;
       updatePowerUI();
-      document.getElementById("btn-charge").disabled = false;
-      document.getElementById("btn-charge").classList.remove("charging");
+      const chargeBtn = document.getElementById("btn-charge");
+      if (chargeBtn) {
+        chargeBtn.disabled = false;
+        chargeBtn.classList.remove("charging");
+      }
 
       updateAimAngle();
       renderScene();
     }
 
     function updateAimAngle() {
-      throwAngle = parseFloat(document.getElementById("input-angle").value);
-      document.getElementById("val-angle").textContent = `${throwAngle > 0 ? '+' : ''}${throwAngle.toFixed(1)}°`;
+      const input = document.getElementById("input-angle");
+      if (!input) return;
+      throwAngle = parseFloat(input.value);
+      const valLabel = document.getElementById("val-angle");
+      if (valLabel) {
+        valLabel.textContent = `${throwAngle > 0 ? '+' : ''}${throwAngle.toFixed(1)}°`;
+      }
 
       if (dartState === "AIMING") {
         renderScene();
@@ -969,8 +1045,10 @@
     }
 
     function updatePowerUI() {
-      document.getElementById("val-power").textContent = `${Math.round(throwPower)}%`;
-      document.getElementById("powerBarFill").style.width = `${throwPower}%`;
+      const valLabel = document.getElementById("val-power");
+      const fillBar = document.getElementById("powerBarFill");
+      if (valLabel) valLabel.textContent = `${Math.round(throwPower)}%`;
+      if (fillBar) fillBar.style.width = `${throwPower}%`;
     }
 
     // --- 加強版蓄力條機制 ---
@@ -980,8 +1058,11 @@
       initAudio();
 
       const btn = document.getElementById("btn-charge");
-      btn.classList.add("charging");
-      btn.querySelector("span:first-child").textContent = "⚡ 正在強力蓄力...";
+      if (btn) {
+        btn.classList.add("charging");
+        const span = btn.querySelector("span:first-child");
+        if (span) span.textContent = "⚡ 正在強力蓄力...";
+      }
 
       if (chargingInterval) clearInterval(chargingInterval);
       chargeDirection = 1;
@@ -1008,14 +1089,16 @@
       chargingInterval = null;
 
       const btn = document.getElementById("btn-charge");
-      btn.classList.remove("charging");
-      btn.querySelector("span:first-child").textContent = "🎯 按住蓄力";
+      if (btn) {
+        btn.classList.remove("charging");
+        const span = btn.querySelector("span:first-child");
+        if (span) span.textContent = "🎯 按住蓄力";
+      }
 
       executeThrow();
     }
 
     function calculateLanding() {
-      // 根據加高畫布深度調整投擲落點公式
       const targetX = dartOriginX + (throwAngle * 9.2);
       const targetY = 270 - (throwPower - 30) * 1.95;
       return { x: targetX, y: targetY };
@@ -1023,7 +1106,9 @@
 
     function executeThrow() {
       playBeep(360, 'sine', 0.12);
-      document.getElementById("btn-charge").disabled = true;
+      const btn = document.getElementById("btn-charge");
+      if (btn) btn.disabled = true;
+
       dartState = "FLYING";
       dartLanding = calculateLanding();
 
@@ -1047,7 +1132,7 @@
       }
     }
 
-    // --- 判定得分（紅心 50 分絕對精準） ---
+    // --- 判定得分（紅心 50 分精確判定） ---
     function resolveDartHit() {
       dartState = "STUCK";
       const hitX = dartLanding.x;
@@ -1085,19 +1170,21 @@
       updateHUD();
 
       const toast = document.getElementById("dartToast");
-      toast.textContent = toastMsg;
-      if (isBullseye) {
-        toast.className = "dart-hit-toast show bullseye";
-      } else if (isMiss) {
-        toast.className = "dart-hit-toast show miss";
-      } else {
-        toast.className = "dart-hit-toast show";
+      if (toast) {
+        toast.textContent = toastMsg;
+        if (isBullseye) {
+          toast.className = "dart-hit-toast show bullseye";
+        } else if (isMiss) {
+          toast.className = "dart-hit-toast show miss";
+        } else {
+          toast.className = "dart-hit-toast show";
+        }
       }
 
       renderScene();
 
       setTimeout(() => {
-        toast.className = "dart-hit-toast";
+        if (toast) toast.className = "dart-hit-toast";
         currentRoundIndex++;
         if (currentRoundIndex < totalRounds) {
           showQuizPhase();
@@ -1109,6 +1196,7 @@
 
     // --- 繪製加高版 3D 投擲場景 ---
     function renderScene() {
+      if (!ctx) return;
       const W = canvas.width;
       const H = canvas.height;
       ctx.clearRect(0, 0, W, H);
@@ -1314,9 +1402,14 @@
     // --- 最終結算 ---
     function showFinalSummary() {
       const finalScore = quizScore + dartScore;
-      document.getElementById("res-student-text").textContent = `班別：${currentUser.className} ｜ 學號：${currentUser.classNo}`;
-      document.getElementById("res-final-score").textContent = finalScore;
-      document.getElementById("res-score-detail").textContent = `答題得分：${quizScore} 分 ｜ 飛鏢得分：${dartScore} 分`;
+      const elStudent = document.getElementById("res-student-text");
+      const elScore = document.getElementById("res-final-score");
+      const elDetail = document.getElementById("res-score-detail");
+      const elEval = document.getElementById("res-eval-text");
+
+      if (elStudent) elStudent.textContent = `班別：${currentUser.className} ｜ 學號：${currentUser.classNo}`;
+      if (elScore) elScore.textContent = finalScore;
+      if (elDetail) elDetail.textContent = `答題得分：${quizScore} 分 ｜ 飛鏢得分：${dartScore} 分`;
 
       let evalMsg = "";
       if (finalScore >= 500) {
@@ -1326,9 +1419,10 @@
       } else {
         evalMsg = "🌱 潛力射手級：已基本掌握四大分類要領，多加練習偏角與蓄力時機，下次必定登上顛峰！";
       }
-      document.getElementById("res-eval-text").textContent = evalMsg;
+      if (elEval) elEval.textContent = evalMsg;
 
-      document.getElementById("resultModal").classList.remove("hidden");
+      const resModal = document.getElementById("resultModal");
+      if (resModal) resModal.classList.remove("hidden");
     }
 
     // 匯出 CSV 成績單
@@ -1350,7 +1444,8 @@
     }
 
     function restartGame() {
-      document.getElementById("resultModal").classList.add("hidden");
+      const resModal = document.getElementById("resultModal");
+      if (resModal) resModal.classList.add("hidden");
       startChallenge();
     }
   </script>
