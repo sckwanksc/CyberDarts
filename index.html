@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>倉頡神射手：字母四大分類飛鏢大挑戰</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", Roboto, sans-serif;
+    }
+    body {
+      background: radial-gradient(circle at center, #f0fdf4 0%, #e0f2fe 100%);
+      color: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+    #game-container {
+      width: 100%;
+      max-width: 960px;
+      background: #ffffff;
+      border: 3px solid #38bdf8;
+      border-radius: 22px;
+      box-shadow: 0 16px 40px rgba(14, 165, 233, 0.2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* 頂部資訊列 */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      border-bottom: 2px solid #e2e8f0;
+      padding: 12px 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .user-info-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #0369a1;
+      background: #e0f2fe;
+      padding: 6px 14px;
+      border-radius: 12px;
+      border: 1.5px solid #bae6fd;
+    }
+    .score-stats {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .stat-pill {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #334155;
+      background: #f1f5f9;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #cbd5e1;
+    }
+    .stat-pill b {
+      color: #0284c7;
+      font-size: 16px;
+    }
+
+    /* 主體區塊 */
+    .main-body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 階段一：答題區 */
+    #quiz-section {
+      padding: 26px 20px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 18px;
+    }
+    .quiz-card {
+      width: 100%;
+      max-width: 660px;
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
+      border-radius: 20px;
+      padding: 26px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+      position: relative;
+    }
+    .quiz-progress-text {
+      font-size: 13px;
+      font-weight: 800;
+      color: #0284c7;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .target-letter-display {
+      width: 110px;
+      height: 110px;
+      margin: 10px auto;
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      border-radius: 22px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.35);
+      border: 3px solid #bae6fd;
+    }
+    .target-letter-char {
+      font-size: 54px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .quiz-question-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 14px 0 18px;
+    }
+    .category-options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      width: 100%;
+    }
+    .btn-opt {
+      background: #f8fafc;
+      border: 2px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 17px;
+      font-weight: 800;
+      color: #1e293b;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-opt:hover:not(:disabled) {
+      border-color: #0284c7;
+      background: #e0f2fe;
+      transform: translateY(-2px);
+    }
+    .btn-opt.correct {
+      background: #dcfce7 !important;
+      border-color: #16a34a !important;
+      color: #15803d !important;
+    }
+    .btn-opt.wrong {
+      background: #fee2e2 !important;
+      border-color: #ef4444 !important;
+      color: #991b1b !important;
+    }
+
+    /* 答題回饋卡 */
+    .feedback-box {
+      width: 100%;
+      max-width: 660px;
+      border-radius: 14px;
+      padding: 14px 20px;
+      font-size: 14.5px;
+      line-height: 1.5;
+      text-align: left;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .feedback-box.success {
+      display: block;
+      background: #dcfce7;
+      border: 2px solid #86efac;
+      color: #166534;
+    }
+    .feedback-box.encouragement {
+      display: block;
+      background: #fffbeb;
+      border: 2px solid #fde68a;
+      color: #92400e;
+    }
+    .feedback-box .encourage-text {
+      font-weight: 900;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .feedback-box .hint-text {
+      font-weight: 700;
+      color: #b45309;
+    }
+
+    /* 階段二：正面視角飛鏢遊戲區 */
+    #dart-section {
+      display: none;
+      flex-direction: column;
+      background: #ffffff;
+    }
+    .dart-stage-wrapper {
+      position: relative;
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, #e2e8f0 70%, #cbd5e1 100%);
+      min-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    canvas#dartCanvas {
+      display: block;
+      width: 100%;
+      max-width: 760px;
+      height: 420px;
+    }
+
+    /* 飛鏢控制列 */
+    .dart-controls-bar {
+      background: #f8fafc;
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+    @media (max-width: 780px) {
+      .dart-controls-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+    .control-card {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .control-title {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 800;
+      color: #334155;
+    }
+    .control-title span.val {
+      color: #0284c7;
+      font-size: 14px;
+      font-weight: 900;
+    }
+    .control-card input[type="range"] {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: #cbd5e1;
+      outline: none;
+      accent-color: #0284c7;
+      cursor: pointer;
+    }
+
+    /* 蓄力條顯示槽 */
+    .power-gauge-track {
+      width: 100%;
+      height: 18px;
+      background: #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1.5px solid #cbd5e1;
+      position: relative;
+    }
+    .power-gauge-fill {
+      width: 30%;
+      height: 100%;
+      background: linear-gradient(90deg, #10b981 0%, #f59e0b 60%, #ef4444 100%);
+      border-radius: 8px;
+      transition: width 0.04s linear;
+    }
+
+    /* 蓄力發射按鈕 */
+    .btn-charge-throw {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 900;
+      border: none;
+      border-radius: 14px;
+      padding: 15px 20px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(22, 163, 74, 0.35);
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      white-space: nowrap;
+    }
+    .btn-charge-throw.charging {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      transform: scale(0.97);
+      box-shadow: 0 2px 10px rgba(245, 158, 11, 0.5);
+    }
+    .btn-charge-throw:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* 浮動命中/射失通知 */
+    .dart-hit-toast {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.94);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 900;
+      padding: 10px 24px;
+      border-radius: 30px;
+      border: 2px solid #38bdf8;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 10;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      max-width: 90%;
+      text-align: center;
+    }
+    .dart-hit-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(10px) scale(1.02);
+    }
+    .dart-hit-toast.miss {
+      border-color: #f59e0b;
+      background: rgba(30, 41, 59, 0.96);
+      color: #fef08a;
+    }
+
+    /* 彈窗（登入與結算） */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 9999;
+    }
+    .modal-overlay.hidden { display: none !important; }
+    .modal-card {
+      background: #ffffff;
+      border: 3px solid #38bdf8;
+      border-radius: 22px;
+      width: 100%;
+      max-width: 480px;
+      padding: 28px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      margin: 18px 0;
+    }
+    .form-group {
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: #334155;
+      margin-bottom: 5px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 15px;
+      font-weight: 700;
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+    .btn-login {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 800;
+      border: none;
+      border-radius: 12px;
+      padding: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+      transition: all 0.2s;
+    }
+    .btn-login:hover {
+      background: #0284c7;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <!-- 頂部資訊列 -->
+    <div class="header-bar">
+      <div class="user-info-badge">
+        <span>👤 特工：</span>
+        <span id="ui-student-label">未登入</span>
+      </div>
+      <div class="score-stats">
+        <div class="stat-pill">進度：<b id="ui-round">1 / 10</b></div>
+        <div class="stat-pill">答題得分：<b id="ui-quiz-score">0</b></div>
+        <div class="stat-pill">飛鏢得分：<b id="ui-dart-score">0</b></div>
+        <div class="stat-pill">總分：<b id="ui-total-score" style="color:#16a34a;">0</b></div>
+      </div>
+    </div>
+
+    <div class="main-body">
+      <!-- 階段一：答題區 -->
+      <section id="quiz-section">
+        <div class="quiz-card">
+          <div class="quiz-progress-text">🎯 第一階段：倉頡字根辨析挑戰</div>
+
+          <div class="target-letter-display">
+            <div class="target-letter-char" id="quiz-letter-char">日</div>
+          </div>
+
+          <div class="quiz-question-title">
+            請問這個倉頡字母屬於哪一個大類？
+          </div>
+
+          <div class="category-options-grid">
+            <button class="btn-opt" onclick="selectAnswer('哲理類')">哲理類</button>
+            <button class="btn-opt" onclick="selectAnswer('筆畫類')">筆畫類</button>
+            <button class="btn-opt" onclick="selectAnswer('人體類')">人體類</button>
+            <button class="btn-opt" onclick="selectAnswer('字形類')">字形類</button>
+          </div>
+        </div>
+
+        <!-- 答題回饋卡（成功或鼓勵與提示） -->
+        <div class="feedback-box" id="quiz-feedback-box">
+          <div class="encourage-text" id="fb-encourage"></div>
+          <div class="hint-text" id="fb-hint"></div>
+        </div>
+      </section>
+
+      <!-- 階段二：正面向前投擲飛鏢挑戰 -->
+      <section id="dart-section">
+        <div class="dart-stage-wrapper">
+          <div class="dart-hit-toast" id="dartToast">🎯 命中紅心！+50 分</div>
+          <canvas id="dartCanvas" width="760" height="420"></canvas>
+        </div>
+
+        <div class="dart-controls-bar">
+          <!-- 左右偏角調節滑桿 -->
+          <div class="control-card">
+            <div class="control-title">
+              <span>📐 瞄準偏角 (Angle)</span>
+              <span class="val" id="val-angle">0.0°</span>
+            </div>
+            <input type="range" id="input-angle" min="-25" max="25" step="0.5" value="0" oninput="updateAimAngle()">
+          </div>
+
+          <!-- 力度蓄力顯示條 -->
+          <div class="control-card">
+            <div class="control-title">
+              <span>⚡ 投擲蓄力 (Power)</span>
+              <span class="val" id="val-power">30%</span>
+            </div>
+            <div class="power-gauge-track">
+              <div class="power-gauge-fill" id="powerBarFill"></div>
+            </div>
+          </div>
+
+          <!-- 蓄力／發射複合按鈕 -->
+          <button class="btn-charge-throw" id="btn-charge" 
+                  onmousedown="startCharging()" 
+                  onmouseup="releaseThrow()" 
+                  ontouchstart="startCharging(event)" 
+                  ontouchend="releaseThrow(event)">
+            <span>🎯 按住蓄力</span>
+            <span style="font-size:12px; font-weight:700; opacity:0.9;">鬆開即可向前發射！</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- 彈窗 1：登入界面（僅需班別與學號） -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-card">
+      <div style="font-size:46px; margin-bottom:6px;">🎯⌨️</div>
+      <h2 style="color:#0284c7; margin-bottom:6px;">倉頡神射手：四大分類</h2>
+      <p style="font-size:13.5px; color:#64748b; line-height:1.5;">
+        歡迎進入飛鏢訓練場！請輸入班別及學號以開始挑戰。
+      </p>
+
+      <form class="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>班別 (Class)：</label>
+          <input type="text" id="login-class" placeholder="例：1A / 2B" required autofocus>
+        </div>
+        <div class="form-group">
+          <label>學號 (Class No.)：</label>
+          <input type="number" id="login-no" min="1" max="50" placeholder="例：15" required>
+        </div>
+        <button type="submit" class="btn-login">🚀 開始挑戰</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 彈窗 2：最終成就結算報告 -->
+  <div class="modal-overlay hidden" id="resultModal">
+    <div class="modal-card">
+      <div style="font-size:50px; margin-bottom:4px;">🏆</div>
+      <h2 style="color:#0284c7; margin-bottom:4px;">訓練結算成就報告</h2>
+      <p style="font-size:13.5px; color:#64748b;" id="res-student-text">班別：- ｜ 學號：-</p>
+
+      <div style="margin:16px 0; background:#f0fdf4; border:2px solid #86efac; border-radius:14px; padding:16px; width:100%;">
+        <div style="font-size:13px; font-weight:800; color:#166534;">最終綜合成績</div>
+        <div style="font-size:46px; font-weight:900; color:#15803d; margin:4px 0;" id="res-final-score">0</div>
+        <div style="font-size:13.5px; color:#475569;" id="res-score-detail">
+          答題得分：0 ｜ 飛鏢得分：0
+        </div>
+      </div>
+
+      <p style="font-size:14px; font-weight:800; color:#0369a1; margin-bottom:18px;" id="res-eval-text">
+        太厲害了！你對倉頡四大分類瞭如指掌，飛鏢命中率極其精準！
+      </p>
+
+      <div style="display:flex; gap:10px; width:100%;">
+        <button class="btn-login" style="flex:1;" onclick="exportCSV()">📥 匯出成績 CSV</button>
+        <button class="btn-login" style="flex:1; background:#64748b;" onclick="restartGame()">🔄 重新開始挑戰</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 音效系統 (Web Audio API) ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext();
+    }
+    function playBeep(freq = 440, type = 'sine', duration = 0.12) {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+    function playHitSound(isBullseye = false) {
+      if (isBullseye) {
+        playBeep(659.25, 'triangle', 0.15);
+        setTimeout(() => playBeep(880, 'triangle', 0.25), 100);
+      } else {
+        playBeep(260, 'triangle', 0.12);
+      }
+    }
+
+    // --- 倉頡 24 個基本字母資料庫 ---
+    const CANGJIE_LETTERS = [
+      // 哲理類 (7個)
+      { char: "日", key: "A", category: "哲理類", hint: "代表太陽天象與天地自然，屬於五行哲理！" },
+      { char: "月", key: "B", category: "哲理類", hint: "代表月亮陰陽天象，屬於哲理自然五行！" },
+      { char: "金", key: "C", category: "哲理類", hint: "代表五行金屬物質，屬於哲理類！" },
+      { char: "木", key: "D", category: "哲理類", hint: "代表五行植物樹木，屬於哲理類！" },
+      { char: "水", key: "E", category: "哲理類", hint: "代表五行水流液體，屬於哲理類！" },
+      { char: "火", key: "F", category: "哲理類", hint: "代表五行火炎光熱，屬於哲理類！" },
+      { char: "土", key: "G", category: "哲理類", hint: "代表五行大地泥土，屬於哲理類！" },
+
+      // 筆畫類 (7個)
+      { char: "竹", key: "H", category: "筆畫類", hint: "代表基本筆畫中的『斜（撇）』，屬於筆畫類！" },
+      { char: "戈", key: "I", category: "筆畫類", hint: "代表基本筆畫中的『點』，屬於筆畫類！" },
+      { char: "十", key: "J", category: "筆畫類", hint: "代表基本筆畫中的『交（十字交叉）』，屬於筆畫類！" },
+      { char: "大", key: "K", category: "筆畫類", hint: "代表基本筆畫中的『叉』，屬於筆畫類！" },
+      { char: "中", key: "L", category: "筆畫類", hint: "代表基本筆畫中的『縱（直筆垂直線）』，屬於筆畫類！" },
+      { char: "一", key: "M", category: "筆畫類", hint: "代表最基本的橫筆線條，屬於筆畫類！" },
+      { char: "弓", key: "N", category: "筆畫類", hint: "代表基本筆畫中的『鉤（彎鉤）』，屬於筆畫類！" },
+
+      // 人體類 (4個)
+      { char: "人", key: "O", category: "人體類", hint: "代表人的整個軀幹與外形，屬於人體類！" },
+      { char: "心", key: "P", category: "人體類", hint: "代表人的心靈與器官心臟，屬於人體類！" },
+      { char: "手", key: "Q", category: "人體類", hint: "代表人的肢體手掌，屬於人體類！" },
+      { char: "口", key: "R", category: "人體類", hint: "代表人的器官嘴巴嘴部，屬於人體類！" },
+
+      // 字形類 (6個)
+      { char: "尸", key: "S", category: "字形類", hint: "代表文字輪廓的『側（側彎）』形態，屬於字形類！" },
+      { char: "廿", key: "T", category: "字形類", hint: "代表文字輪廓的『並（並列）』形態，屬於字形類！" },
+      { char: "山", key: "U", category: "字形類", hint: "代表文字輪廓的『仰（向上開口）』形態，屬於字形類！" },
+      { char: "女", key: "V", category: "字形類", hint: "代表文字輪廓的『紐（交疊旋轉）』形態，屬於字形類！" },
+      { char: "田", key: "W", category: "字形類", hint: "代表文字輪廓的『方（四方封閉框）』形態，屬於字形類！" },
+      { char: "卜", key: "Y", category: "字形類", hint: "代表文字線條交錯的『卜形』輪廓，屬於字形類！" }
+    ];
+
+    // 答錯時鼓勵語庫
+    const QUIZ_ENCOURAGE_QUOTES = [
+      "🌟 別氣餒，失敗是學習的最佳指引！記住提示下次一定對！",
+      "💪 差一點點就答對了！多看一眼字根特徵，你一定能掌握！",
+      "🌱 學習是一步一腳印的探索，每一次嘗試都在讓你更進步！",
+      "✨ 沒關係，倉頡四大分類需要一點巧思，記住提示再接再厲！",
+      "🎯 保持信心！調整好心態，在接下來的飛鏢投擲大展身手吧！"
+    ];
+
+    // 射失（脫靶）專屬溫暖鼓勵語庫
+    const MISS_ENCOURAGE_QUOTES = [
+      "💨 脫靶了沒關係！感受飛鏢拋物線，下一次一定能正中靶心！",
+      "🌈 差一點點！觀察靶盤隨機位置，調整蓄力節奏，加油！",
+      "🎯 失敗是下一次神準的校準器！放鬆肩膀，下一鏢看你的！",
+      "💪 別氣餒！留意偏角與蓄力長度，你正在逐步掌握投擲手感！",
+      "✨ 每一次出手都是經驗的累積，調整心態，重整旗鼓再來一鏢！"
+    ];
+
+    // --- 遊戲全局狀態 ---
+    let currentUser = { className: "", classNo: "" };
+    let totalRounds = 10;
+    let currentRoundIndex = 0;
+    let quizScore = 0;
+    let dartScore = 0;
+    let activeQuestion = null;
+    let questionPool = [];
+
+    // --- Canvas 與物理飛鏢狀態 ---
+    const canvas = document.getElementById("dartCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // 靶盤中心位置（每回合隨機動態生成）
+    let boardCX = 380;
+    let boardCY = 165;
+    const radiusOuter = 130;  // 10分
+    const radiusMiddle = 85;  // 20分
+    const radiusInner = 45;   // 30分
+    const radiusBull = 16;    // 50分
+
+    // 飛鏢起始位置（底部正中，玩家視角）
+    const dartOriginX = 380;
+    const dartOriginY = 380;
+
+    let throwAngle = 0;       // -25 ~ +25 度 (左右偏角)
+    let throwPower = 30;      // 30% ~ 100% 動態蓄力
+    let dartState = "AIMING"; // AIMING, FLYING, STUCK
+
+    // 蓄力條循環動畫定時器
+    let chargingInterval = null;
+    let chargeDirection = 1;  // +1 增加, -1 減少
+
+    // 飛鏢飛行動畫參數
+    let flightProgress = 0;
+    let flightDuration = 36;
+    let currentFrame = 0;
+    let dartLanding = { x: 380, y: 165 };
+
+    // --- 登入處理 ---
+    function handleLogin(e) {
+      e.preventDefault();
+      initAudio();
+      currentUser.className = document.getElementById("login-class").value.trim();
+      currentUser.classNo = document.getElementById("login-no").value.trim();
+
+      if (!currentUser.className || !currentUser.classNo) return;
+
+      document.getElementById("ui-student-label").textContent = `${currentUser.className}班 (${currentUser.classNo}號)`;
+      document.getElementById("loginModal").classList.add("hidden");
+
+      startChallenge();
+    }
+
+    function startChallenge() {
+      questionPool = [...CANGJIE_LETTERS].sort(() => 0.5 - Math.random()).slice(0, totalRounds);
+      currentRoundIndex = 0;
+      quizScore = 0;
+      dartScore = 0;
+      updateHUD();
+      showQuizPhase();
+    }
+
+    function updateHUD() {
+      document.getElementById("ui-round").textContent = `${currentRoundIndex + 1} / ${totalRounds}`;
+      document.getElementById("ui-quiz-score").textContent = quizScore;
+      document.getElementById("ui-dart-score").textContent = dartScore;
+      document.getElementById("ui-total-score").textContent = quizScore + dartScore;
+    }
+
+    // --- 答題階段 ---
+    function showQuizPhase() {
+      activeQuestion = questionPool[currentRoundIndex];
+      document.getElementById("quiz-letter-char").textContent = activeQuestion.char;
+
+      const fbBox = document.getElementById("quiz-feedback-box");
+      fbBox.className = "feedback-box";
+      fbBox.style.display = "none";
+
+      const btns = document.querySelectorAll(".btn-opt");
+      btns.forEach(b => {
+        b.className = "btn-opt";
+        b.disabled = false;
+      });
+
+      document.getElementById("quiz-section").style.display = "flex";
+      document.getElementById("dart-section").style.display = "none";
+    }
+
+    function selectAnswer(chosenCat) {
+      initAudio();
+      const btns = document.querySelectorAll(".btn-opt");
+      btns.forEach(b => b.disabled = true);
+
+      const fbBox = document.getElementById("quiz-feedback-box");
+      const fbEncourage = document.getElementById("fb-encourage");
+      const fbHint = document.getElementById("fb-hint");
+
+      if (chosenCat === activeQuestion.category) {
+        // 答對
+        playBeep(587.33, 'triangle', 0.15);
+        quizScore += 20;
+        updateHUD();
+
+        fbBox.className = "feedback-box success";
+        fbEncourage.textContent = `🎉 答對了！+20 分！『${activeQuestion.char}』確實屬於【${activeQuestion.category}】！`;
+        fbHint.textContent = `✨ 恭喜你精準掌握字根造字原理！即刻解鎖飛鏢投擲機會！`;
+
+        btns.forEach(b => {
+          if (b.textContent.trim() === activeQuestion.category) b.classList.add("correct");
+        });
+
+        setTimeout(() => {
+          showDartPhase();
+        }, 1300);
+      } else {
+        // 答錯：給予溫暖鼓勵與專屬提示
+        playBeep(220, 'sawtooth', 0.22);
+
+        const randomQuote = QUIZ_ENCOURAGE_QUOTES[Math.floor(Math.random() * QUIZ_ENCOURAGE_QUOTES.length)];
+        fbBox.className = "feedback-box encouragement";
+        fbEncourage.textContent = randomQuote;
+        fbHint.textContent = `💡 記憶提示：『${activeQuestion.char}』應為【${activeQuestion.category}】！${activeQuestion.hint}`;
+
+        btns.forEach(b => {
+          if (b.textContent.trim() === chosenCat) b.classList.add("wrong");
+          if (b.textContent.trim() === activeQuestion.category) b.classList.add("correct");
+        });
+
+        setTimeout(() => {
+          showDartPhase();
+        }, 2200);
+      }
+    }
+
+    // --- 飛鏢階段：隨機靶位生成與瞄準 ---
+    function randomizeTargetPosition() {
+      // 隨機生成靶盤位置，確保在畫布安全範圍內
+      // X 範圍：230 ~ 530 (寬度 760)
+      boardCX = Math.round(230 + Math.random() * 300);
+      // Y 範圍：115 ~ 205 (高度 420)
+      boardCY = Math.round(115 + Math.random() * 90);
+    }
+
+    function showDartPhase() {
+      document.getElementById("quiz-section").style.display = "none";
+      document.getElementById("dart-section").style.display = "flex";
+
+      // 1. 每回合隨機生成靶盤位置
+      randomizeTargetPosition();
+
+      dartState = "AIMING";
+      throwPower = 30;
+      updatePowerUI();
+      document.getElementById("btn-charge").disabled = false;
+      document.getElementById("btn-charge").classList.remove("charging");
+
+      updateAimAngle();
+      renderScene();
+    }
+
+    function updateAimAngle() {
+      throwAngle = parseFloat(document.getElementById("input-angle").value);
+      document.getElementById("val-angle").textContent = `${throwAngle > 0 ? '+' : ''}${throwAngle.toFixed(1)}°`;
+
+      if (dartState === "AIMING") {
+        renderScene();
+      }
+    }
+
+    function updatePowerUI() {
+      document.getElementById("val-power").textContent = `${Math.round(throwPower)}%`;
+      document.getElementById("powerBarFill").style.width = `${throwPower}%`;
+    }
+
+    // --- 蓄力條動態機制 (按住蓄力 / 鬆開發射) ---
+    function startCharging(e) {
+      if (e && e.type === 'touchstart') e.preventDefault();
+      if (dartState !== "AIMING") return;
+      initAudio();
+
+      const btn = document.getElementById("btn-charge");
+      btn.classList.add("charging");
+      btn.querySelector("span:first-child").textContent = "⚡ 正在蓄力...";
+
+      if (chargingInterval) clearInterval(chargingInterval);
+      chargeDirection = 1;
+
+      // 平滑震盪蓄力：30% 到 100% 往返
+      chargingInterval = setInterval(() => {
+        throwPower += chargeDirection * 3.2;
+        if (throwPower >= 100) {
+          throwPower = 100;
+          chargeDirection = -1;
+        } else if (throwPower <= 25) {
+          throwPower = 25;
+          chargeDirection = 1;
+        }
+        updatePowerUI();
+      }, 30);
+    }
+
+    function releaseThrow(e) {
+      if (e && e.type === 'touchend') e.preventDefault();
+      if (dartState !== "AIMING") return;
+      if (!chargingInterval) return;
+
+      clearInterval(chargingInterval);
+      chargingInterval = null;
+
+      const btn = document.getElementById("btn-charge");
+      btn.classList.remove("charging");
+      btn.querySelector("span:first-child").textContent = "🎯 按住蓄力";
+
+      executeThrow();
+    }
+
+    // 計算投擲目標落點
+    function calculateLanding() {
+      // 水平方向：角度影響 X 偏移 (每 1 度約偏移 10px)
+      const targetX = dartOriginX + (throwAngle * 10.0);
+
+      // 垂直方向：力度影響 Y 落點高低
+      // 力度越高，落點越高（Y 越小）；力度越小，重力下墜越多（Y 越大）
+      const targetY = 225 - (throwPower - 30) * 1.85;
+
+      return { x: targetX, y: targetY };
+    }
+
+    function executeThrow() {
+      playBeep(360, 'sine', 0.12);
+      document.getElementById("btn-charge").disabled = true;
+      dartState = "FLYING";
+      dartLanding = calculateLanding();
+
+      currentFrame = 0;
+      flightProgress = 0;
+      animateFlight();
+    }
+
+    function animateFlight() {
+      if (dartState !== "FLYING") return;
+
+      currentFrame++;
+      flightProgress = currentFrame / flightDuration;
+
+      renderScene();
+
+      if (currentFrame < flightDuration) {
+        requestAnimationFrame(animateFlight);
+      } else {
+        resolveDartHit();
+      }
+    }
+
+    function resolveDartHit() {
+      dartState = "STUCK";
+      const hitX = dartLanding.x;
+      const hitY = dartLanding.y;
+
+      // 計算與當前隨機靶心的距離
+      const dist = Math.hypot(hitX - boardCX, hitY - boardCY);
+
+      let gained = 0;
+      let toastMsg = "";
+      let isBullseye = false;
+      let isMiss = false;
+
+      if (dist <= radiusBull) {
+        gained = 50;
+        toastMsg = "🎯 完美命中紅心！BULLSEYE! (+50 分)";
+        isBullseye = true;
+      } else if (dist <= radiusInner) {
+        gained = 30;
+        toastMsg = "🌟 命中內金環！(+30 分)";
+      } else if (dist <= radiusMiddle) {
+        gained = 20;
+        toastMsg = "🎯 命中中銀環！(+20 分)";
+      } else if (dist <= radiusOuter) {
+        gained = 10;
+        toastMsg = "👍 命中外綠環！(+10 分)";
+      } else {
+        // 脫靶：送上隨機溫暖鼓勵金句
+        gained = 0;
+        isMiss = true;
+        const missQuote = MISS_ENCOURAGE_QUOTES[Math.floor(Math.random() * MISS_ENCOURAGE_QUOTES.length)];
+        toastMsg = missQuote;
+      }
+
+      playHitSound(isBullseye);
+      dartScore += gained;
+      updateHUD();
+
+      // 彈出提示
+      const toast = document.getElementById("dartToast");
+      toast.textContent = toastMsg;
+      toast.className = isMiss ? "dart-hit-toast show miss" : "dart-hit-toast show";
+
+      renderScene();
+
+      // 2.2 秒後切換至下一題或結算
+      setTimeout(() => {
+        toast.className = "dart-hit-toast";
+        currentRoundIndex++;
+        if (currentRoundIndex < totalRounds) {
+          showQuizPhase();
+        } else {
+          showFinalSummary();
+        }
+      }, 2300);
+    }
+
+    // --- 繪製正面 3D 投擲場景 ---
+    function renderScene() {
+      const W = canvas.width;
+      const H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      // 1. 靶牆背景與地板透視
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = "#cbd5e1";
+      ctx.beginPath();
+      ctx.moveTo(0, H);
+      ctx.lineTo(W, H);
+      ctx.lineTo(W * 0.82, H - 65);
+      ctx.lineTo(W * 0.18, H - 65);
+      ctx.closePath();
+      ctx.fill();
+
+      // 2. 繪製隨機位置的正面標準同心圓飛鏢靶
+      drawFrontDartboard(boardCX, boardCY);
+
+      // 3. 瞄準階段：繪製短版白色角度提示虛線與立體飛鏢
+      if (dartState === "AIMING") {
+        drawShortAimingGuide();
+        drawHandDart(dartOriginX, dartOriginY, 1.45, throwAngle);
+      }
+
+      // 4. 飛行階段：飛鏢破空向前（3D 比例縮小與拋物線高度）
+      if (dartState === "FLYING") {
+        const t = flightProgress;
+        const arcHeight = Math.sin(t * Math.PI) * 26;
+        const curX = dartOriginX + (dartLanding.x - dartOriginX) * t;
+        const curY = (dartOriginY + (dartLanding.y - dartOriginY) * t) - arcHeight;
+        const curScale = 1.45 - (1.45 - 0.72) * t;
+
+        drawHandDart(curX, curY, curScale, throwAngle * (1 - t * 0.5));
+      }
+
+      // 5. 扎靶完成
+      if (dartState === "STUCK") {
+        drawEmbeddedDart(dartLanding.x, dartLanding.y, 0.75);
+      }
+    }
+
+    // 繪製正面飛鏢靶盤
+    function drawFrontDartboard(cx, cy) {
+      ctx.save();
+
+      // 外層保護外框與立體陰影
+      ctx.shadowColor = "rgba(15, 23, 42, 0.28)";
+      ctx.shadowBlur = 18;
+      ctx.shadowOffsetY = 8;
+      ctx.fillStyle = "#0f172a";
+      ctx.beginPath();
+      ctx.arc(cx, cy, radiusOuter + 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // 外綠環 (10 分)
+      ctx.fillStyle = "#15803d";
+      ctx.beginPath();
+      ctx.arc(cx, cy, radiusOuter, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // 中銀環 (20 分)
+      ctx.fillStyle = "#f8fafc";
+      ctx.beginPath();
+      ctx.arc(cx, cy, radiusMiddle, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // 內金環 (30 分)
+      ctx.fillStyle = "#f59e0b";
+      ctx.beginPath();
+      ctx.arc(cx, cy, radiusInner, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // 靶心紅心 (50 分)
+      ctx.fillStyle = "#dc2626";
+      ctx.beginPath();
+      ctx.arc(cx, cy, radiusBull, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // 環上分數標記
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.font = "bold 11px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("50", cx, cy);
+      ctx.fillText("30", cx, cy - (radiusInner + radiusBull) / 2);
+      ctx.fillStyle = "#1e293b";
+      ctx.fillText("20", cx, cy - (radiusMiddle + radiusInner) / 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText("10", cx, cy - (radiusOuter + radiusMiddle) / 2);
+    }
+
+    // 繪製短版白色微光瞄準虛線（適度提示角度，保留探索挑戰）
+    function drawShortAimingGuide() {
+      const guideLength = 72; // 短版虛線長度
+      const rad = (throwAngle * Math.PI) / 180;
+      const startX = dartOriginX;
+      const startY = dartOriginY - 25;
+      const endX = startX + Math.sin(rad) * guideLength;
+      const endY = startY - Math.cos(rad) * guideLength;
+
+      ctx.save();
+      ctx.setLineDash([6, 5]);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3.5;
+      ctx.shadowColor = "rgba(2, 132, 199, 0.95)";
+      ctx.shadowBlur = 8;
+
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+
+      // 虛線前端微光指引點
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#38bdf8";
+      ctx.beginPath();
+      ctx.arc(endX, endY, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // 繪製玩家視角飛鏢
+    function drawHandDart(x, y, scale = 1.0, tiltAngle = 0) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+      ctx.rotate((tiltAngle * Math.PI) / 180);
+
+      ctx.shadowColor = "rgba(0,0,0,0.2)";
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetY = 4;
+
+      // 鏢針
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -22);
+      ctx.stroke();
+
+      // 鏢身
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillRect(-3.5, 0, 7, 24);
+      ctx.fillStyle = "#b45309";
+      ctx.fillRect(-3.5, 8, 7, 4);
+
+      // 鏢桿
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(-2, 24, 4, 18);
+
+      // 鏢翼（經典十字立體紅翼）
+      ctx.fillStyle = "#dc2626";
+      ctx.beginPath();
+      ctx.moveTo(0, 32);
+      ctx.lineTo(-14, 46);
+      ctx.lineTo(0, 42);
+      ctx.lineTo(14, 46);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#b91c1c";
+      ctx.beginPath();
+      ctx.moveTo(-1, 26);
+      ctx.lineTo(-4, 44);
+      ctx.lineTo(0, 48);
+      ctx.lineTo(4, 44);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // 繪製扎在靶面上的飛鏢
+    function drawEmbeddedDart(x, y, scale = 0.72) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.beginPath();
+      ctx.ellipse(0, 6, 8, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillRect(-3, -12, 6, 16);
+
+      ctx.fillStyle = "#dc2626";
+      ctx.beginPath();
+      ctx.moveTo(0, -12);
+      ctx.lineTo(-11, -24);
+      ctx.lineTo(0, -20);
+      ctx.lineTo(11, -24);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#b91c1c";
+      ctx.beginPath();
+      ctx.moveTo(-3, -12);
+      ctx.lineTo(-4, -26);
+      ctx.lineTo(0, -28);
+      ctx.lineTo(4, -26);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // --- 最終結算 ---
+    function showFinalSummary() {
+      const finalScore = quizScore + dartScore;
+      document.getElementById("res-student-text").textContent = `班別：${currentUser.className} ｜ 學號：${currentUser.classNo}`;
+      document.getElementById("res-final-score").textContent = finalScore;
+      document.getElementById("res-score-detail").textContent = `答題得分：${quizScore} 分 ｜ 飛鏢得分：${dartScore} 分`;
+
+      let evalMsg = "";
+      if (finalScore >= 500) {
+        evalMsg = "🌟 神射大師級：倉頡四大分類倒背如流，動態靶心百步穿楊，締造了無可挑剔的神級分數！";
+      } else if (finalScore >= 350) {
+        evalMsg = "👏 資深特工級：對倉頡 24 個字母具有高超辨識力，隨機靶盤控角與蓄力極其出色！";
+      } else {
+        evalMsg = "🌱 潛力射手級：已基本掌握四大分類要領，多加練習偏角與蓄力時機，下次必定登上顛峰！";
+      }
+      document.getElementById("res-eval-text").textContent = evalMsg;
+
+      document.getElementById("resultModal").classList.remove("hidden");
+    }
+
+    // 匯出 CSV 成績單
+    function exportCSV() {
+      const finalScore = quizScore + dartScore;
+      const csvHeader = "班別,學號,答題得分,飛鏢得分,總成績,評級\n";
+      let rank = finalScore >= 500 ? "神射大師" : (finalScore >= 350 ? "資深特工" : "潛力射手");
+      const csvRow = `"${currentUser.className}","${currentUser.classNo}",${quizScore},${dartScore},${finalScore},"${rank}"\n`;
+
+      const blob = new Blob(["\uFEFF" + csvHeader + csvRow], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `倉頡飛鏢成績_${currentUser.className}_${currentUser.classNo}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function restartGame() {
+      document.getElementById("resultModal").classList.add("hidden");
+      startChallenge();
+    }
+  </script>
+</body>
+</html>
